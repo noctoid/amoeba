@@ -184,20 +184,57 @@ serious engines are C++/Rust cores with Python bindings.
   asyncio marshaling bottleneck at the Python↔engine boundary; the compiled cores
   do the heavy lifting.
 
-## 10. Open questions / decisions
+## 10. Decisions
 
-- [ ] Target client class: thin clients (CLI, DBeaver, raw PyMySQL) vs full
-      JDBC/ORM frameworks? Determines how much `INFORMATION_SCHEMA`/prepared
-      statement/transaction surface is required.
-- [ ] Language: Go (`go-mysql-server`) vs Rust (DataFusion) vs Python (mysql-mimic
-      + DuckDB/DataFusion)?
-- [ ] Data IR: Arrow everywhere, or keep backend-native until the engine boundary?
-- [ ] Write/mutation scope for v1: read-only first, or include `INSERT` into
-      files/APIs?
-- [ ] Schema/typing policy for CSV/JSON backends: explicit per-table schema
-      overrides vs inference.
-- [ ] What "simple SQL" means precisely (which clauses/joins/aggregates are in
-      scope).
+Resolved 2026-08-29:
+
+- [x] **Target client class: thin clients** (mysql CLI, PyMySQL, light GUI
+      clients). No JDBC/ORM conformance burden — full `INFORMATION_SCHEMA` /
+      server-side prepared statement fidelity is out of scope for v1.
+- [x] **Language: Python** — `mysql-mimic` (protocol) + **DuckDB** (engine) +
+      **pyarrow** (data IR glue). DuckDB reads CSV/Parquet/Excel natively and
+      executes the SQL; adapters feed it.
+- [x] **Data IR: Arrow internally, `list[dict]` at the adapter boundary.**
+      Adapters return plain `list[dict]`; the engine boundary converts with
+      `pyarrow.Table.from_pylist()` and registers into DuckDB. Adapters never
+      hand-build Arrow.
+- [x] **Write/mutation scope: read-only v1.** Simple `INSERT`/`UPDATE` are in
+      the v1+ SQL definition but deferred; the adapter contract leaves room
+      for them.
+- [x] **Schema/typing policy: both, composed.** Inference is the default
+      (pyarrow/DuckDB sniffing); explicit per-table schema overrides take
+      precedence and are applied as casts at registration time. Rule:
+      *override wins, infer the rest.* This is also the escape hatch for the
+      fundamental limit §7.2.
+- [x] **"Simple SQL" (v1 definition):** `SELECT * FROM t`,
+      `SELECT COUNT(*) FROM t` (i.e. plain projection + basic aggregates),
+      simple `INSERT`, simple `UPDATE`. DuckDB's own parser/planner is the
+      engine, so joins/aggregates beyond this come for free; the definition
+      bounds what we *commit to supporting*, not what happens to work.
+
+### Architecture consequence
+
+With DuckDB as the engine, the formal "logical plan IR" is DuckDB's own
+planner, not one we control. The adapter contract is thin for v1:
+
+```
+scan(table) -> list[dict]          # plus optional filter/projection hints later
+```
+
+Revisit DataFusion-Python the day real predicate pushdown into custom APIs
+matters.
+
+## 10.1 Milestones
+
+1. **Project scaffold** — package layout, `pyproject.toml`, deps
+   (`mysql-mimic`, `duckdb`, `pyarrow`, `openpyxl`). ← current
+2. **Config-driven catalog** — declare `my_table -> data.csv`, optional
+   schema override.
+3. **Wire protocol → engine** — `mysql-mimic` session executes via DuckDB.
+4. **End-to-end proof** — real `mysql` CLI: `SELECT * FROM my_table;` and
+   `SELECT COUNT(*) FROM my_table;`.
+
+XLSX backend and the first API adapter follow once the spine is proven.
 
 ## 11. References
 
