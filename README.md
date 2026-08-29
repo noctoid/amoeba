@@ -227,9 +227,9 @@ matters.
 ## 10.1 Milestones
 
 1. **Project scaffold** — package layout, `pyproject.toml`, deps
-   (`mysql-mimic`, `duckdb`, `pyarrow`, `openpyxl`). ← current
+   (`mysql-mimic`, `duckdb`, `pyarrow`, `openpyxl`).
 2. **Config-driven catalog** — declare `my_table -> data.csv`, optional
-   schema override.
+   schema override. ← current
 3. **Wire protocol → engine** — `mysql-mimic` session executes via DuckDB.
 4. **End-to-end proof** — real `mysql` CLI: `SELECT * FROM my_table;` and
    `SELECT COUNT(*) FROM my_table;`.
