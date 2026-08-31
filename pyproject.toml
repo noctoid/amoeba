@@ -16,6 +16,9 @@ dependencies = [
     "openpyxl>=3.1",
 ]
 
+[project.scripts]
+amoeba = "amoeba.__main__:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8",

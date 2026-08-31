@@ -1,0 +1,92 @@
+# Amoeba catalog — declare virtual SQL tables over files.
+#
+# Run with:  amoeba example.toml
+#
+# Each [[tables]] entry maps a logical table name to a source file.
+# The backend is inferred from the source extension unless `backend`
+# is set explicitly:
+#     .csv/.tsv   -> csv
+#     .xlsx/.xls  -> xlsx
+#     .parquet/.arrow -> parquet
+#
+# Column `type` values are DuckDB type strings (BIGINT, VARCHAR,
+# DECIMAL(10,2), TIMESTAMP, ...). A missing `type` means "infer from the
+# source". Explicit types win; inferred types fill the rest.
+
+[[tables]]
+name = "users"
+source = "data/users.csv"
+
+[[tables.columns]]
+name = "id"
+type = "BIGINT"
+
+[[tables.columns]]
+name = "created_at"
+type = "TIMESTAMP"
+
+[[tables]]
+name = "orders"
+source = "data/orders.parquet"
+
+[[tables]]
+name = "metrics"
+source = "data/metrics.xlsx"
+backend = "xlsx"
+
+[[tables.columns]]
+name = "value"
+type = "DECIMAL(12,2)"
+
+# --- Complex cases -------------------------------------------------------
+
+# Tab-separated source. `.tsv` maps to the csv backend; `read_csv_auto`
+# sniffs the delimiter, so no extra config is needed.
+[[tables]]
+name = "events_tsv"
+source = "data/events.tsv"
+
+# Arrow IPC file (Arrow is Parquet's in-memory format; DuckDB reads both
+# via read_parquet). `.arrow` maps to the parquet backend.
+[[tables]]
+name = "events_arrow"
+source = "data/events.arrow"
+backend = "parquet"
+
+# A wide table with mixed typing: only the listed columns are cast to the
+# declared type; every other column is inferred from the source.
+[[tables]]
+name = "ledger"
+source = "data/ledger.parquet"
+
+[[tables.columns]]
+name = "amount"
+type = "DECIMAL(18,4)"
+
+[[tables.columns]]
+name = "posted_at"
+type = "TIMESTAMP WITH TIME ZONE"
+
+[[tables.columns]]
+name = "event_id"
+type = "UUID"
+
+[[tables.columns]]
+name = "active"
+type = "BOOLEAN"
+
+[[tables.columns]]
+name = "tags"
+type = "VARCHAR[]"
+
+[[tables.columns]]
+name = "meta"
+type = "STRUCT(version INTEGER, origin VARCHAR)"
+
+[[tables.columns]]
+name = "attrs"
+type = "MAP(VARCHAR, VARCHAR)"
+
+[[tables.columns]]
+name = "payload"
+type = "JSON"

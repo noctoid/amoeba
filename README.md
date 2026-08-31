@@ -226,15 +226,26 @@ matters.
 
 ## 10.1 Milestones
 
-1. **Project scaffold** — package layout, `pyproject.toml`, deps
+1. [x] **Project scaffold** — package layout, `pyproject.toml`, deps
    (`mysql-mimic`, `duckdb`, `pyarrow`, `openpyxl`).
-2. **Config-driven catalog** — declare `my_table -> data.csv`, optional
-   schema override. ← current
-3. **Wire protocol → engine** — `mysql-mimic` session executes via DuckDB.
-4. **End-to-end proof** — real `mysql` CLI: `SELECT * FROM my_table;` and
+2. [x] **Config-driven catalog** — declare `my_table -> data.csv`, optional
+   schema override.
+3. [x] **Wire protocol → engine** — `mysql-mimic` session executes via DuckDB.
+4. [x] **End-to-end proof** — real `mysql` CLI: `SELECT * FROM my_table;` and
    `SELECT COUNT(*) FROM my_table;`.
 
 XLSX backend and the first API adapter follow once the spine is proven.
+
+### Run it
+
+```console
+$ amoeba path/to/amoeba.toml --port 3307
+$ mysql --protocol=tcp -h 127.0.0.1 -P 3307 -u root
+mysql> SHOW TABLES;
+mysql> SELECT * FROM users;
+```
+
+The server accepts any username with an empty password (mock auth).
 
 ## 11. References
 
