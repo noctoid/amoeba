@@ -233,8 +233,13 @@ matters.
 3. [x] **Wire protocol → engine** — `mysql-mimic` session executes via DuckDB.
 4. [x] **End-to-end proof** — real `mysql` CLI: `SELECT * FROM my_table;` and
    `SELECT COUNT(*) FROM my_table;`.
+5. [x] **Generic REST/JSON API adapter** — `backend = "api"`: `rows_path`
+   extraction, `none`/`offset`/`cursor` pagination, static-header auth,
+   `max_pages` unbounded-pull guard. Empty API responses require declared
+   column types (nothing to infer from).
 
-XLSX backend and the first API adapter follow once the spine is proven.
+Remaining follow-ups: predicate-pushdown hints into adapters, write support
+(v1+), page-number pagination if a real API demands it.
 
 ### Run it
 

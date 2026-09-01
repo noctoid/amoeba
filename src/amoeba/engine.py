@@ -130,7 +130,7 @@ class Engine:
 
     def _register(self, table: Table) -> None:
         rows = backends.scan(table, self._conn)
-        arrow = pa.Table.from_pylist(rows) if rows else self._empty_arrow(table)
+        arrow = pa.Table.from_pylist(rows) if rows else backends.empty_arrow(table, self._conn)
         overrides = table.schema_overrides
         if not overrides:
             self._conn.register(table.name, arrow)
@@ -147,11 +147,3 @@ class Engine:
         self._conn.execute(
             f'CREATE VIEW "{table.name}" AS SELECT {projection} FROM "{internal}"'
         )
-
-    def _empty_arrow(self, table: Table) -> pa.Table:
-        """Zero-row Arrow table carrying the source's inferred schema."""
-        cur = self._conn.execute(
-            f"SELECT * FROM {backends.reader(table)}(?) LIMIT 0",
-            [backends.source_path(table)],
-        )
-        return cur.arrow().read_all()

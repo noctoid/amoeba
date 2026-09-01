@@ -90,3 +90,33 @@ type = "MAP(VARCHAR, VARCHAR)"
 [[tables.columns]]
 name = "payload"
 type = "JSON"
+
+# --- API backend ---------------------------------------------------------
+
+# A JSON REST endpoint exposed as a table. The adapter GETs the URL,
+# extracts the row array at `rows_path` (dotted path, `$` = top-level
+# array), and follows pagination until exhausted:
+#   none   — one request returns everything (default)
+#   offset — sends limit_param/offset_param, pages by page_size until a
+#            short page comes back
+#   cursor — reads the next token from cursor_path in the response and
+#            sends it back as cursor_param until absent
+# `max_pages` (default 100) is a hard cap against unbounded pulls.
+# `[tables.headers]` carries static auth — bearer tokens, API keys, etc.
+# If the API returns no rows, declare column types: there is nothing to
+# infer from an empty response.
+
+# [[tables]]
+# name = "issues"
+# backend = "api"
+# source = "https://api.example.com/issues"
+# rows_path = "$.items"
+# pagination = "offset"
+# page_size = 100
+
+# [[tables.columns]]
+# name = "id"
+# type = "BIGINT"
+
+# [tables.headers]
+# Authorization = "Bearer <token>"
